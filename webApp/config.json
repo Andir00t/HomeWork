@@ -1,0 +1,11 @@
+{
+    "channel_name": "bussineschannel",
+    "appAdmin": "admin",
+    "appAdminSecret": "adminpw",
+    "orgMSPID": "InsuranceOrgMSP",
+    "caName": "ca.insorg.hw.com",
+    "peerName": "peer0.insorg.hw.com",
+    "userName": "admin",
+	"ccName": "hwcc_vs",
+    "gatewayDiscovery": { "enabled": true, "asLocalhost": true }
+ }

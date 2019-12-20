@@ -1,0 +1,43 @@
+{
+    "name": "hwnetwork",
+    "version": "1.0.0",
+    "client": {
+        "organization": "InsuranceOrg",
+        "connection": {
+            "timeout": {
+                "peer": {
+                    "endorser": "300"
+                },
+                "orderer": "300"
+            }
+        }
+    },
+    "organizations": {
+        "InsuranceOrg": {
+            "mspid": "InsuranceOrgMSP",
+            "peers": [
+                "peer0.insorg.hw.com"
+            ],
+            "certificateAuthorities": [
+                "ca.insorg.hw.com"
+            ]
+        }
+    },
+    "peers": {
+        "peer0.insorg.hw.com": {
+            "url": "grpcs://localhost:9051",
+            "tlsCACerts": {
+                "pem": "set by app"
+                },
+                "grpcOptions": {
+                    "ssl-target-name-override": "peer0.insorg.hw.com"
+                }
+        }
+    },
+    "certificateAuthorities": {
+        "ca.insorg.hw.com": {
+            "url": "https://localhost:8054",
+            "caName": "ca.insorg.hw.com"
+        }
+    }
+}

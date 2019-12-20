@@ -1,0 +1,238 @@
+Organizations:
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: crypto-config/ordererOrganizations/hw.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+
+    - &ClientOrg
+        Name: ClientOrgMSP
+        ID: ClientOrgMSP
+        MSPDir: crypto-config/peerOrganizations/clientorg.hw.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('ClientOrgMSP.admin', 'ClientOrgMSP.peer', 'ClientOrgMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('ClientOrgMSP.admin', 'ClientOrgMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('ClientOrgMSP.member')"
+
+        AnchorPeers:
+            - Host: peer0.clientorg.hw.com
+              Port: 7051
+
+    - &InsuranceOrg
+        Name: InsuranceOrgMSP
+        ID: InsuranceOrgMSP
+        MSPDir: crypto-config/peerOrganizations/insorg.hw.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('InsuranceOrgMSP.admin', 'InsuranceOrgMSP.peer', 'InsuranceOrgMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('InsuranceOrgMSP.admin', 'InsuranceOrgMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('InsuranceOrgMSP.member')"
+
+        AnchorPeers:
+            - Host: peer0.insorg.hw.com
+              Port: 9051
+
+    - &ArbitratorOrg
+        Name: ArbitratorOrgMSP
+        ID: ArbitratorOrgMSP
+        MSPDir: crypto-config/peerOrganizations/arbitorg.hw.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('ArbitratorOrgMSP.admin', 'ArbitratorOrgMSP.peer', 'ArbitratorOrgMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('ArbitratorOrgMSP.admin', 'ArbitratorOrgMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('ArbitratorOrgMSP.member')"
+
+        AnchorPeers:
+            - Host: peer0.arbitorg.hw.com
+              Port: 11051
+
+Capabilities:
+    Channel: &ChannelCapabilities
+        V1_4_3: true
+        V1_3: false
+        V1_1: false
+
+    Orderer: &OrdererCapabilities
+        V1_4_2: true
+        V1_1: false
+
+    Application: &ApplicationCapabilities
+        V1_4_2: true
+        V1_3: false
+        V1_2: false
+        V1_1: false
+
+Application: &ApplicationDefaults
+    ACLs: &ACLsDefault
+
+        lscc/ChaincodeExists: /Channel/Application/Readers
+        lscc/GetDeploymentSpec: /Channel/Application/Readers
+        lscc/GetChaincodeData: /Channel/Application/Readers
+        lscc/GetInstantiatedChaincodes: /Channel/Application/Readers
+
+        qscc/GetChainInfo: /Channel/Application/Readers
+        qscc/GetBlockByNumber: /Channel/Application/Readers
+        qscc/GetBlockByHash: /Channel/Application/Readers
+        qscc/GetTransactionByID: /Channel/Application/Readers
+        qscc/GetBlockByTxID: /Channel/Application/Readers
+
+        cscc/GetConfigBlock: /Channel/Application/Readers
+        cscc/GetConfigTree: /Channel/Application/Readers
+        cscc/SimulateConfigTreeUpdate: /Channel/Application/Readers
+
+        peer/Propose: /Channel/Application/Writers
+        peer/ChaincodeToChaincode: /Channel/Application/Readers
+
+        event/Block: /Channel/Application/Readers
+        event/FilteredBlock: /Channel/Application/Readers
+
+    Organizations:
+
+    Policies: &ApplicationDefaultPolicies
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+    OrdererType: solo
+
+    Addresses:
+        - orderer0.hw.com:13050
+
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+
+    EtcdRaft:
+        Consenters:
+        - Host: orderer0.hw.com
+          Port: 13050
+          ClientTLSCert: crypto-config/ordererOrganizations/hw.com/orderers/orderer0.hw.com/tls/server.crt
+          ServerTLSCert: crypto-config/ordererOrganizations/hw.com/orderers/orderer0.hw.com/tls/server.crt
+        - Host: orderer1.hw.com
+          Port: 13051
+          ClientTLSCert: crypto-config/ordererOrganizations/hw.com/orderers/orderer1.hw.com/tls/server.crt
+          ServerTLSCert: crypto-config/ordererOrganizations/hw.com/orderers/orderer1.hw.com/tls/server.crt
+        - Host: orderer2.hw.com
+          Port: 13052
+          ClientTLSCert: crypto-config/ordererOrganizations/hw.com/orderers/orderer2.hw.com/tls/server.crt
+          ServerTLSCert: crypto-config/ordererOrganizations/hw.com/orderers/orderer2.hw.com/tls/server.crt
+
+        Options:
+            TickInterval: 500ms
+            ElectionTick: 10
+            HeartbeatTick: 1
+            MaxInflightBlocks: 5
+            SnapshotIntervalSize: 20 MB
+
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+    Capabilities:
+        <<: *ChannelCapabilities
+Profiles:
+    OneOrgsChannel:
+        Consortium: AloneConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *InsuranceOrg
+            Capabilities:
+                <<: *ApplicationCapabilities
+
+    TreeOrgsChannel:
+        Consortium: HWConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *ClientOrg
+                - *InsuranceOrg
+                - *ArbitratorOrg
+            Capabilities:
+                <<: *ApplicationCapabilities
+
+    TreeOrgsChannelRaftGenesis:
+        <<: *ChannelDefaults
+        Capabilities:
+            <<: *ChannelCapabilities
+        Orderer:
+            <<: *OrdererDefaults
+            OrdererType: etcdraft
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+            - <<: *OrdererOrg
+        Consortiums:
+            HWConsortium:
+                Organizations:
+                    - *ClientOrg
+                    - *InsuranceOrg
+                    - *ArbitratorOrg
+            AloneConsortium:
+                Organizations:
+                    - *InsuranceOrg

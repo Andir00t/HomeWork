@@ -1,0 +1,338 @@
+version: '2'
+
+volumes:
+  
+  cli.hw.com:
+  ca.clientorg.hw.com:
+  ca.insorg.hw.com:
+  ca.arbitorg.hw.com:
+  orderer0.hw.com:
+  orderer1.hw.com:
+  orderer2.hw.com:  
+  peer0.clientorg.hw.com:
+  peer1.clientorg.hw.com:  
+  peer0.insorg.hw.com:
+  peer1.insorg.hw.com:
+  peer0.arbitorg.hw.com:
+  peer1.arbitorg.hw.com:
+
+networks:
+  hwnetwork:
+
+services:
+
+  cli.hw.com:
+    container_name: cli.hw.com
+    image: hyperledger/fabric-tools:latest
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=syschannel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.clientorg.hw.com:7051
+      - CORE_PEER_LOCALMSPID=ClientOrgMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer/crypto/peerOrganizations/clientorg.hw.com/peers/peer0.clientorg.hw.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer/crypto/peerOrganizations/clientorg.hw.com/peers/peer0.clientorg.hw.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/crypto/peerOrganizations/clientorg.hw.com/peers/peer0.clientorg.hw.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/crypto/peerOrganizations/clientorg.hw.com/users/Admin@clientorg.hw.com/msp
+      - ORDERER_CA=/etc/hyperledger/fabric/peer/crypto/ordererOrganizations/hw.com/tlsca/tlsca.hw.com-cert.pem
+    working_dir: /etc/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./chaincode/:/etc/chaincode
+        - ./crypto-config:/etc/hyperledger/fabric/peer/crypto/
+        - ./channel-artifacts:/etc/hyperledger/fabric/peer/channel-artifacts
+        - ./:/etc/hyperledger/fabric/peer
+    depends_on:
+      - orderer0.hw.com
+      - peer0.clientorg.hw.com
+      - peer1.clientorg.hw.com
+      - peer0.insorg.hw.com
+      - peer1.insorg.hw.com
+      - peer0.arbitorg.hw.com
+      - peer1.arbitorg.hw.com
+    networks:
+      - hwnetwork
+      
+  ca.clientorg.hw.com:
+    extends:
+      file: node-base.yaml
+      service: ca-base
+    environment:
+      - FABRIC_CA_SERVER_CA_NAME=ca.clientorg.hw.com
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.clientorg.hw.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/${CA_CLIENTORG_PRIVATE_KEY}
+      - FABRIC_CA_SERVER_PORT=7054
+    ports:
+      - 7054:7054
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.clientorg.hw.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/${CA_CLIENTORG_PRIVATE_KEY} -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/clientorg.hw.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca.clientorg.hw.com
+    networks:
+      - hwnetwork
+
+  ca.insorg.hw.com:
+    extends:
+      file: node-base.yaml
+      service: ca-base
+    environment:
+      - FABRIC_CA_SERVER_CA_NAME=ca.insorg.hw.com
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.insorg.hw.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/${CA_INSORG_PRIVATE_KEY}
+      - FABRIC_CA_SERVER_PORT=8054
+    ports:
+      - 8054:8054
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.insorg.hw.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/${CA_INSORG_PRIVATE_KEY} -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/insorg.hw.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca.insorg.hw.com
+    networks:
+      - hwnetwork
+      
+  ca.arbitorg.hw.com:
+    extends:
+      file: node-base.yaml
+      service: ca-base
+    environment:
+      - FABRIC_CA_SERVER_CA_NAME=ca.arbitorg.hw.com
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.arbitorg.hw.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/${CA_ARBITORG_PRIVATE_KEY}
+      - FABRIC_CA_SERVER_PORT=9054
+    ports:
+      - 9054:9054
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.arbitorg.hw.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/${CA_ARBITORG_PRIVATE_KEY} -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/arbitorg.hw.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca.arbitorg.hw.com
+    networks:
+      - hwnetwork
+
+  
+  orderer0.hw.com:
+    extends:
+      file: node-base.yaml
+      service: orderer-base
+    environment:
+      - ORDERER_GENERAL_LISTENPORT=13050
+    container_name: orderer0.hw.com
+    networks:
+    - hwnetwork
+    volumes:
+        - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./crypto-config/ordererOrganizations/hw.com/orderers/orderer0.hw.com/msp:/var/hyperledger/orderer/msp
+        - ./crypto-config/ordererOrganizations/hw.com/orderers/orderer0.hw.com/tls/:/var/hyperledger/orderer/tls
+        - ./crypto-config/ordererOrganizations/hw.com/users/:/var/hyperledger/users
+        - orderer0.hw.com:/var/hyperledger/production/orderer
+    ports:
+      - 13050:13050
+
+  orderer1.hw.com:
+    extends:
+      file: node-base.yaml
+      service: orderer-base
+    environment:
+      - ORDERER_GENERAL_LISTENPORT=13051
+    container_name: orderer1.hw.com
+    networks:
+    - hwnetwork
+    volumes:
+        - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./crypto-config/ordererOrganizations/hw.com/orderers/orderer1.hw.com/msp:/var/hyperledger/orderer/msp
+        - ./crypto-config/ordererOrganizations/hw.com/orderers/orderer1.hw.com/tls/:/var/hyperledger/orderer/tls
+        - ./crypto-config/ordererOrganizations/hw.com/users/:/var/hyperledger/users
+        - orderer1.hw.com:/var/hyperledger/production/orderer
+    ports:
+      - 13051:13051
+
+  orderer2.hw.com:
+    extends:
+      file: node-base.yaml
+      service: orderer-base
+    environment:
+      - ORDERER_GENERAL_LISTENPORT=13052
+    container_name: orderer2.hw.com
+    networks:
+    - hwnetwork
+    volumes:
+        - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./crypto-config/ordererOrganizations/hw.com/orderers/orderer2.hw.com/msp:/var/hyperledger/orderer/msp
+        - ./crypto-config/ordererOrganizations/hw.com/orderers/orderer2.hw.com/tls/:/var/hyperledger/orderer/tls
+        - ./crypto-config/ordererOrganizations/hw.com/users/:/var/hyperledger/users
+        - orderer2.hw.com:/var/hyperledger/production/orderer
+    ports:
+      - 13052:13052
+
+  peer0.clientorg.hw.com:
+    extends:
+      file: node-base.yaml
+      service: peer-base
+    container_name: peer0.clientorg.hw.com
+    networks:
+    - hwnetwork
+    environment:
+      - CORE_PEER_ID=peer0.clientorg.hw.com
+      - CORE_PEER_ADDRESS=peer0.clientorg.hw.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.clientorg.hw.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.clientorg.hw.com:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.clientorg.hw.com:7051
+      - CORE_PEER_LOCALMSPID=ClientOrgMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/users/Admin@clientorg.hw.com/msp
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/clientorg.hw.com/peers/peer0.clientorg.hw.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/clientorg.hw.com/peers/peer0.clientorg.hw.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/clientorg.hw.com/users:/etc/hyperledger/fabric/users
+        - ./channel-artifacts/:/etc/hyperledger/fabric/channel-artifacts
+        - peer0.clientorg.hw.com:/var/hyperledger/production      
+    ports:
+      - 7051:7051
+      - 7052:7052
+
+  peer1.clientorg.hw.com:
+    extends:
+      file: node-base.yaml
+      service: peer-base
+    container_name: peer1.clientorg.hw.com
+    networks:
+    - hwnetwork
+    environment:
+      - CORE_PEER_ID=peer1.clientorg.hw.com
+      - CORE_PEER_ADDRESS=peer1.clientorg.hw.com:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.clientorg.hw.com:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.clientorg.hw.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.clientorg.hw.com:8051
+      - CORE_PEER_LOCALMSPID=ClientOrgMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/users/Admin@clientorg.hw.com/msp
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/clientorg.hw.com/peers/peer1.clientorg.hw.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/clientorg.hw.com/peers/peer1.clientorg.hw.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/clientorg.hw.com/users:/etc/hyperledger/fabric/users
+        - ./channel-artifacts/:/etc/hyperledger/fabric/channel-artifacts
+        - peer1.clientorg.hw.com:/var/hyperledger/production
+
+    ports:
+      - 8051:8051
+      - 8052:8052
+      
+  peer0.insorg.hw.com:
+    container_name: peer0.insorg.hw.com
+    networks:
+    - hwnetwork
+    extends:
+      file: node-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.insorg.hw.com
+      - CORE_PEER_ADDRESS=peer0.insorg.hw.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.insorg.hw.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.insorg.hw.com:10051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.insorg.hw.com:9051
+      - CORE_PEER_LOCALMSPID=InsuranceOrgMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/users/Admin@insorg.hw.com/msp
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/insorg.hw.com/peers/peer0.insorg.hw.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/insorg.hw.com/peers/peer0.insorg.hw.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/insorg.hw.com/users:/etc/hyperledger/fabric/users
+        - ./channel-artifacts/:/etc/hyperledger/fabric/channel-artifacts
+        - peer0.insorg.hw.com:/var/hyperledger/production
+    ports:
+      - 9051:9051
+      - 9052:9052
+
+  peer1.insorg.hw.com:
+    container_name: peer1.insorg.hw.com
+    networks:
+    - hwnetwork
+    extends:
+      file: node-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.insorg.hw.com
+      - CORE_PEER_ADDRESS=peer1.insorg.hw.com:10051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.insorg.hw.com:10052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.insorg.hw.com:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.insorg.hw.com:10051
+      - CORE_PEER_LOCALMSPID=InsuranceOrgMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/users/Admin@insorg.hw.com/msp
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/insorg.hw.com/peers/peer1.insorg.hw.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/insorg.hw.com/peers/peer1.insorg.hw.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/insorg.hw.com/users:/etc/hyperledger/fabric/users
+        - ./channel-artifacts/:/etc/hyperledger/fabric/channel-artifacts
+        - peer1.insorg.hw.com:/var/hyperledger/production
+    ports:
+      - 10051:10051
+      - 10052:10052  
+  
+  peer0.arbitorg.hw.com:
+    container_name: peer0.arbitorg.hw.com
+    networks:
+    - hwnetwork
+    extends:
+      file: node-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.arbitorg.hw.com
+      - CORE_PEER_ADDRESS=peer0.arbitorg.hw.com:11051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:11051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.arbitorg.hw.com:11052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:11052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.arbitorg.hw.com:12051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.arbitorg.hw.com:11051
+      - CORE_PEER_LOCALMSPID=ArbitratorOrgMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/users/Admin@arbitorg.hw.com/msp
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/arbitorg.hw.com/peers/peer0.arbitorg.hw.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/arbitorg.hw.com/peers/peer0.arbitorg.hw.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/arbitorg.hw.com/users:/etc/hyperledger/fabric/users
+        - ./channel-artifacts/:/etc/hyperledger/fabric/channel-artifacts
+        - peer0.arbitorg.hw.com:/var/hyperledger/production
+    ports:
+      - 11051:11051
+      - 11052:11052
+
+  peer1.arbitorg.hw.com:
+    container_name: peer1.arbitorg.hw.com
+    networks:
+    - hwnetwork
+    extends:
+      file: node-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.arbitorg.hw.com
+      - CORE_PEER_ADDRESS=peer1.arbitorg.hw.com:12051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:12051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.arbitorg.hw.com:12052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:12052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.arbitorg.hw.com:11051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.arbitorg.hw.com:12051
+      - CORE_PEER_LOCALMSPID=ArbitratorOrgMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/users/Admin@arbitorg.hw.com/msp
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./crypto-config/peerOrganizations/arbitorg.hw.com/peers/peer1.arbitorg.hw.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/arbitorg.hw.com/peers/peer1.arbitorg.hw.com/tls:/etc/hyperledger/fabric/tls
+        - ./crypto-config/peerOrganizations/arbitorg.hw.com/users:/etc/hyperledger/fabric/users
+        - ./channel-artifacts/:/etc/hyperledger/fabric/channel-artifacts
+        - peer1.arbitorg.hw.com:/var/hyperledger/production
+    ports:
+      - 12051:12051
+      - 12052:12052

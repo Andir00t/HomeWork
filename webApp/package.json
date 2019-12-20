@@ -1,0 +1,19 @@
+{
+  "name": "back",
+  "version": "0.0.1",
+  "scripts": {
+    "client": "cd front && yarn start",
+    "server": "nodemon server.js",
+    "dev": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\""
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "fabric-client": "^1.4.3",
+    "fabric-network": "^1.4.3",
+    "fabric-ca-client": "^1.4.3"
+  },
+  "devDependencies": {
+    "concurrently": "^4.0.1"
+  }
+}
