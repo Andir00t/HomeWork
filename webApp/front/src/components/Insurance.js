@@ -247,6 +247,7 @@ import {
       this.closeModal();
     };
     onConfirmPurchaise = () => {
+      this.state.userInfo.balance >= this.state.purchaiseInfo.instAmount ?
       call.makePurchaise(this.state.userInfo.id, this.state.purchaiseInfo)
           .then(res => {
               if (res.error) {
@@ -261,7 +262,7 @@ import {
           .catch(err => {
             this.showToast(err.toString(), "danger", "alert")
             console.log(err);
-          });
+          }) : this.showToast('Недостаточно средств', "danger")
       this.closeModal();
     };
     enrollAccount = () => {
@@ -409,7 +410,7 @@ import {
               } else {
                       this.getClient();
                       this.componentDidMount();
-                      this.showToast("Выплата успешна произведена");
+                      this.showToast("Выплата успешна произведена", "success");
                }
           })
           .catch(err => {
@@ -418,9 +419,9 @@ import {
           });
     };
     makePayment = refItem => {
-      // this.setState({
-      //   isUserLoaded: false,
-      // });
+      this.setState({
+        isUserLoaded: false,
+      });
       this.closeModal();
       call.makePayment(refItem.clientid, refItem.amount)
       .then(res => {
@@ -620,7 +621,6 @@ import {
                                   <EuiDescriptionListDescription>
                                     {refund.amount}
                                   </EuiDescriptionListDescription>
-
                                   <EuiHorizontalRule  margin="s"/>
                                   <EuiDescriptionListTitle>Статус:</EuiDescriptionListTitle>
                                   <EuiFlexGroup style={{margin:"10px"}} gutterSize="s" alignItems="center">
@@ -631,7 +631,6 @@ import {
                                       <EuiButton isDisabled={refund.state !== 2} size="s" onClick={() => {this.makePayment(refund)}}>Получить выплату</EuiButton>
                                     </EuiFlexItem>
                                   </EuiFlexGroup>
-
                                 </EuiAccordion>
                                 ):
                                 <EuiLoadingSpinner size="m" />
@@ -746,7 +745,7 @@ import {
               <EuiConfirmModal
                 title="Запрос на возмещение"
                 onCancel={this.closeModal}
-                onConfirm={this.onConfirmCreateRefund}
+                onConfirm={() => this.cause.value === '' ? this.cause.focus() : this.onConfirmCreateRefund()}
                 cancelButtonText="Отмена"
                 confirmButtonText="Сформировать"
                 defaultFocusedButton="confirm" >
@@ -778,6 +777,7 @@ import {
                     </EuiFormRow>
                     <EuiFormRow label="Причина">
                       <EuiFieldText
+                        inputRef={el => this.cause = el}
                         value={this.state.refundItem.cause || ''}
                         onChange={e => this.onChangeRefund('cause', e.target.value)}
                       />
@@ -815,13 +815,13 @@ import {
                             <ol>
                               <li>Клиент заходит в приложение страховой (авторизация или регистрация)</li>
                               <li>Выбирает для покупки страховой продукт</li>
-                              <li>При покупке продукта происходит создание договора (поля "Сумма страхового взноса", "Сумма возмещения")</li>
+                              <li>При покупке продукта происходит создание договора (предзаполнены поля "Сумма страхового взноса", "Сумма возмещения")</li>
                               <li>Цена ("Сумма страхового взноса") списывается с баланса клиента и зачисляется на баланс страховой</li>
-                              <li>У клиента возникает страховой случай, он заходит в свой профиль, кнопка "Страховой случай"</li>
-                              <li>Происходит создание сущности запроса на возмещение, которую необходимо подтвердить арбитру (закладка "Арбитр")</li>
-                              <li>Арбитр на свой стороне обраруживает запрос на подтверждение. Подверждает или отклоняет</li>
-                              <li>Если подверждает в профиле клиента активируется кнопка "Получить выплату" и статус "Подтверждено" иначе кнопка неактивна, статус "Отклонено"</li>
-                              <li>В случае статуса "Подтверждено" посленажатия кнопки "Получить выплату" с баланса страховой списывается сумма возмещения (указанная в договоре)</li>
+                              <li>У клиента возникает страховой случай, он заходит в свой профиль, приобретенный продукт, кнопка "Страховой случай"</li>
+                              <li>Происходит создание сущности запроса на возмещение, которую необходимо подтвердить арбитру (закладка "Приложение арбитра")</li>
+                              <li>Арбитр на свой стороне обраруживает запрос на выплату. Согласует или отклоняет</li>
+                              <li>Если согласовано, то в профиле клиента активируется кнопка "Получить выплату" и статус "Одобрено" иначе кнопка неактивна, статус "Отклонено"</li>
+                              <li>В случае статуса "Одобрено" после нажатия кнопки "Получить выплату" с баланса страховой списывается сумма возмещения (указанная в договоре)</li>
                               <li>Баланс клиента увеличивается на сумму возмещения</li>
                             </ol>
                           </EuiText>

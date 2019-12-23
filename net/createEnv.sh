@@ -44,6 +44,7 @@ function on(){
 	echo "#### Start net setup ####"
 	sleep 5
 	docker exec cli.hw.com bash ./setupEnv.sh
+	echo "to start front app, execute 'node ../webApp/server.js'"
 }
 
 function off(){

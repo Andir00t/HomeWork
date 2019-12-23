@@ -3,7 +3,7 @@ const { FileSystemWallet, Gateway, X509WalletMixin } = require('fabric-network')
 const fs = require('fs');
 const path = require('path');
 
-const configJSON = fs.readFileSync('./config.json', 'utf8');
+const configJSON = fs.readFileSync(path.join(__dirname, '..', 'config.json'), 'utf8');
 const config = JSON.parse(configJSON);
 
 const channel = config.channel_name;
@@ -16,16 +16,16 @@ const userName = config.userName;
 const ccName = config.ccName;
 const peerName = config.peerName;
 
-const ccpJSON = fs.readFileSync('./hw_conn_profile.json', 'utf8');
+const ccpJSON = fs.readFileSync(path.join(__dirname, '..', 'hw_conn_profile.json'), 'utf8');
 const ccp = JSON.parse(ccpJSON);
-const org1tlscacert = fs.readFileSync('../net/crypto-config/peerOrganizations/insorg.hw.com/tlsca/tlsca.insorg.hw.com-cert.pem', 'utf8');
+const org1tlscacert = fs.readFileSync(path.join(__dirname, '../..', 'net/crypto-config/peerOrganizations/insorg.hw.com/tlsca/tlsca.insorg.hw.com-cert.pem'), 'utf8');
 ccp.peers[peerName].tlsCACerts.pem = org1tlscacert;
 
 
 let getGW = async () => {
     let result = { gw: undefined, error: ''};
     try {
-        const wallet = new FileSystemWallet('./wallet');
+        const wallet = new FileSystemWallet(path.join(__dirname, '..', 'wallet'));
         const userExists = await wallet.exists(userName);
         if (!userExists) {
             result.error = `Отсутствует криптоматериал для пользователя '${userName}'.`;
