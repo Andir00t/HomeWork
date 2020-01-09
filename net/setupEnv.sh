@@ -1,7 +1,11 @@
+#!/bin/bash
+
 function createChannel(){
 	echo "#### Creating channel... ####"
 	export ORDERER_CA=/etc/hyperledger/fabric/peer/crypto/ordererOrganizations/hw.com/tlsca/tlsca.hw.com-cert.pem
+	set -x
 	peer channel create -o orderer0.hw.com:13050 -c bussineschannel -f ./channel-artifacts/bussineschannel.tx --tls --cafile $ORDERER_CA
+	set +x
 	#peer channel create -o orderer0.hw.com:13050 -c mainchannel -f ./channel-artifacts/mainchannel.tx --tls --cafile $ORDERER_CA	
 }
 
@@ -69,7 +73,9 @@ function joinChannel () {
 			#	sleep 3
 			#	echo "####  ${org}Peer${peer} joined to mainchannel ####"
 			#fi
+			set -x
 			peer channel join -b bussineschannel.block			
+			set +x
 			echo "####  ${org}Peer${peer} joined to bussineschannel ####"
 			sleep 3
 			echo
@@ -83,7 +89,9 @@ function setAnchors () {
 		for peer in 0 1; do
 			setVar${org}Peer${peer}
 			if [ "$peer" = 0 ]; then
+				set -x
 				peer channel update -o orderer0.hw.com:13050 -c bussineschannel -f ./channel-artifacts/${org}MSPanchors.tx --tls --cafile $ORDERER_CA
+				set +x
 				sleep 3
 				echo "####  ${org}Peer${peer} set as anchor ####"
 			fi
@@ -96,7 +104,9 @@ function installChaincode () {
 	for org in ClientOrg InsuranceOrg ArbitratorOrg; do
 		for peer in 0 1; do
 			setVar${org}Peer${peer}
+			set -x
 			peer chaincode install -l node "/etc/chaincode/hwcc_vs@0.0.1.cds"
+			set +x
 			sleep 3
 			echo
 		done
@@ -105,10 +115,21 @@ function installChaincode () {
 
 function instantiateChaincode(){	
 	echo "#### Instantiating chaincode... ####"
-	setVarInsuranceOrgPeer0
-	#peer chaincode instantiate -o orderer0.hw.com:13050 --tls --cafile $ORDERER_CA -C bussineschannel -n hwcc_vs -v 0.0.1 -l node -c '{"Args":["createInsuranse",""]}' -P "OR ('ClientOrgMSP.member','InsuranceOrgMSP.member','ArbitratorOrgMSP.member')"
-	
-	peer chaincode instantiate -o orderer0.hw.com:13050 --tls --cafile $ORDERER_CA -C bussineschannel -n hwcc_vs -v 0.0.1 -l node -c '{"Args":["createInsuranse"]}' -P "OR ('ClientOrgMSP.member','InsuranceOrgMSP.member','ArbitratorOrgMSP.member')"
+	setVarClientOrgPeer0
+	set -x
+	peer chaincode instantiate -o orderer0.hw.com:13050 --tls --cafile $ORDERER_CA -C bussineschannel -n hwcc_vs -v 0.0.1 -l node -c '{"Args":["createInsuranse"]}' -P "OR ('ClientOrgMSP.member','InsuranceOrgMSP.member','ArbitratorOrgMSP.member')"		
+	set +x
+	sleep 30
+	for org in ClientOrg InsuranceOrg ArbitratorOrg; do
+		for peer in 0 1; do
+			setVar${org}Peer${peer}
+			set -x
+			peer chaincode query -C bussineschannel -n hwcc_vs -c '{"Args":["getInsuranceInfo"]}'
+			set +x
+			sleep 3
+			echo
+		done
+	done
 }
 
 function getChannelConfig(){

@@ -1,8 +1,10 @@
-function createEnv() {	
+#!/bin/bash
+
+function createEnv() {
 	echo "#### Generate certificates using cryptogen tool ####"
 	cryptogen generate --config=./crypto-config.yaml
 	wait
-	
+
 	echo "#### Set CA Variables ####"
 	export CA_CLIENTORG_PRIVATE_KEY=$(cd ./crypto-config/peerOrganizations/clientorg.hw.com/ca && ls *_sk)
 	export CA_ARBITORG_PRIVATE_KEY=$(cd ./crypto-config/peerOrganizations/arbitorg.hw.com/ca && ls *_sk)
@@ -44,7 +46,9 @@ function on(){
 	echo "#### Start net setup ####"
 	sleep 5
 	docker exec cli.hw.com bash ./setupEnv.sh
-	echo "to start front app, execute 'node ../webApp/server.js'"
+	wait
+	echo "Starting front app..."
+	node ../webApp/server.js
 }
 
 function off(){

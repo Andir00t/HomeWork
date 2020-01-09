@@ -14,13 +14,24 @@ const orgMspId = config.orgMSPID;
 const caName = config.caName;
 const userName = config.userName;
 const ccName = config.ccName;
-const peerName = config.peerName;
 
 const ccpJSON = fs.readFileSync(path.join(__dirname, '..', 'hw_conn_profile.json'), 'utf8');
-const ccp = JSON.parse(ccpJSON);
-const org1tlscacert = fs.readFileSync(path.join(__dirname, '../..', 'net/crypto-config/peerOrganizations/insorg.hw.com/tlsca/tlsca.insorg.hw.com-cert.pem'), 'utf8');
-ccp.peers[peerName].tlsCACerts.pem = org1tlscacert;
+let ccp = JSON.parse(ccpJSON);
 
+let getTLSCert = org => fs.readFileSync(path.join(__dirname, '../..', `net/crypto-config/peerOrganizations/${org}.hw.com/tlsca/tlsca.${org}.hw.com-cert.pem`), 'utf8');
+
+for(let [peer, peerVal] of Object.entries(ccp.peers)) {
+    if (peer.includes('insorg')){
+        peerVal.tlsCACerts.pem = getTLSCert('insorg');
+        ccp.certificateAuthorities[caName].tlsCACerts.pem = peerVal.tlsCACerts.pem;
+    }
+    else if (peer.includes('clientorg')){
+        peerVal.tlsCACerts.pem = getTLSCert('clientorg');
+    }
+    else if (peer.includes('arbitorg')){
+        peerVal.tlsCACerts.pem = getTLSCert('arbitorg');
+    }
+};
 
 let getGW = async () => {
     let result = { gw: undefined, error: ''};
@@ -53,22 +64,18 @@ exports.enrollAdmin = async () => {
         var response = {};
 		var msg = '';
         const caInfo = ccp.certificateAuthorities[caName];
-        //const caTLSCACerts = caInfo.tlsCACerts.pem;
-        const ca = new FabricCAServices(caInfo.url, { trustedRoots: org1tlscacert, verify: false }, caInfo.caName);
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(process.cwd(), 'wallet');
+        const ca = new FabricCAServices(caInfo.url, { trustedRoots: caInfo.tlsCACerts.pem, verify: false }, caInfo.caName);
+        const walletPath = path.join(__dirname, '..', 'wallet');
         const wallet = new FileSystemWallet(walletPath);
         console.log(`Wallet path: ${walletPath}`);
-        // Check to see if we've already enrolled the admin user.
         const adminExists = await wallet.exists(appAdmin);
         if (adminExists) {
 			msg = `Криптоматериал для пользователя ${appAdmin} уже есть в кошельке`;
-            console.log(msg);
+            console.log(walletPath);
             response.error = msg
         }
         else{
-            // Enroll the admin user, and import the new identity into the wallet.
-            const enrollment = await ca.enroll({ enrollmentID: appAdmin, enrollmentSecret: appAdminPass });
+            const enrollment = await ca.enroll({ enrollmentID: 'admin', enrollmentSecret: 'adminpw' });
             const identity = X509WalletMixin.createIdentity(orgMspId, enrollment.certificate, enrollment.key.toBytes());
             await wallet.import(appAdmin, identity);
             msg = `Криптоматериал для пользователя ${appAdmin} успешно выпущен и помещен в кошелек`

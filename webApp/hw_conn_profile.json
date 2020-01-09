@@ -16,10 +16,31 @@
         "InsuranceOrg": {
             "mspid": "InsuranceOrgMSP",
             "peers": [
-                "peer0.insorg.hw.com"
+                "peer0.insorg.hw.com",
+                "peer1.insorg.hw.com"
             ],
             "certificateAuthorities": [
                 "ca.insorg.hw.com"
+            ]
+        },
+        "ClientOrg": {
+            "mspid": "ClientOrgMSP",
+            "peers": [
+                "peer0.clientorg.hw.com",
+                "peer1.clientorg.hw.com"
+            ],
+            "certificateAuthorities": [
+                "ca.clientorg.hw.com"
+            ]
+        },
+        "ArbitratorOrg": {
+            "mspid": "ArbitratorOrgMSP",
+            "peers": [
+                "peer0.arbitorg.hw.com",
+                "peer1.arbitorg.hw.com"
+            ],
+            "certificateAuthorities": [
+                "ca.arbitorg.hw.com"
             ]
         }
     },
@@ -32,12 +53,83 @@
                 "grpcOptions": {
                     "ssl-target-name-override": "peer0.insorg.hw.com"
                 }
+        },
+        "peer1.insorg.hw.com": {
+            "url": "grpcs://localhost:10051",
+            "tlsCACerts": {
+                "pem": "set by app"
+                },
+                "grpcOptions": {
+                    "ssl-target-name-override": "peer1.insorg.hw.com"
+                }
+        },
+        "peer0.clientorg.hw.com": {
+            "url": "grpcs://localhost:7051",
+            "tlsCACerts": {
+                "pem": "set by app"
+                },
+                "grpcOptions": {
+                    "ssl-target-name-override": "peer0.clientorg.hw.com"
+                }
+        },
+        "peer1.clientorg.hw.com": {
+            "url": "grpcs://localhost:8051",
+            "tlsCACerts": {
+                "pem": "set by app"
+                },
+                "grpcOptions": {
+                    "ssl-target-name-override": "peer1.clientorg.hw.com"
+                }
+        },
+        "peer0.arbitorg.hw.com": {
+            "url": "grpcs://localhost:11051",
+            "tlsCACerts": {
+                "pem": "set by app"
+                },
+                "grpcOptions": {
+                    "ssl-target-name-override": "peer0.arbitorg.hw.com"
+                }
+        },
+        "peer1.arbitorg.hw.com": {
+            "url": "grpcs://localhost:12051",
+            "tlsCACerts": {
+                "pem": "set by app"
+                },
+                "grpcOptions": {
+                    "ssl-target-name-override": "peer1.arbitorg.hw.com"
+                }
         }
     },
     "certificateAuthorities": {
         "ca.insorg.hw.com": {
             "url": "https://localhost:8054",
-            "caName": "ca.insorg.hw.com"
+            "caName": "ca.insorg.hw.com",
+            "tlsCACerts": {
+                "pem": "set by app"
+                },
+                "grpcOptions": {
+                    "ssl-target-name-override": "ca.insorg.hw.com"
+                }
+        },
+        "ca.clientorg.hw.com": {
+            "url": "https://localhost:7054",
+            "caName": "ca.clientorg.hw.com",
+            "tlsCACerts": {
+                "pem": "set by app"
+                },
+                "grpcOptions": {
+                    "ssl-target-name-override": "ca.clientorg.hw.com"
+                }
+        },
+        "ca.arbitorg.hw.com": {
+            "url": "https://localhost:9054",
+            "caName": "ca.arbitorg.hw.com",
+            "tlsCACerts": {
+                "pem": "set by app"
+                },
+                "grpcOptions": {
+                    "ssl-target-name-override": "ca.arbitorg.hw.com"
+                }
         }
     }
 }

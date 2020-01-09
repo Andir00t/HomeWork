@@ -217,7 +217,8 @@ class Arbitrar extends Component {
         field: "cause",
         name: "Причина",
         sortable: false,
-        truncateText: false
+        truncateText: false,
+        render: cause => ( <b>{cause}</b> )
       },
       {
         field: "amount",
@@ -296,6 +297,7 @@ class Arbitrar extends Component {
                             <li>Баланс клиента увеличивается на сумму возмещения</li>
                           </ol>
                         </EuiText>
+                      <br/>
                       </EuiFlexItem>
                       <EuiPanel hasShadow>
                       <EuiText style={{ margin: "10px" }} textAlign="center">
